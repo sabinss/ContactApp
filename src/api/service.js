@@ -31,6 +31,16 @@ class ApiService {
       }
     });
   }
+  async delete(path) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const response = await api.delete(path);
+        resolve(true);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
 }
 
 export default new ApiService();

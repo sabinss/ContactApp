@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useMemo} from 'react';
+import React, {useEffect, useState, useMemo, useContext} from 'react';
 import {
   View,
   Text,
@@ -7,14 +7,18 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
+  Alert,
+  RefreshControl,
+  ToastAndroid,
 } from 'react-native';
 import api from '../api/service';
 import ContactsCard from '../components/ContactCard';
+import {showToast} from '../helper/utility';
+import {ProfileContext} from '../context/ProfileContext';
 
-const MyContact = () => {
-  const [contacts, setContacts] = useState([]);
-  const [loading, setLoading] = useState(false);
-
+const MyContact = ({navigation}) => {
+  const {updateProfile, contacts, fetchContacts, loading} =
+    useContext(ProfileContext);
   const [search, setSearch] = useState('');
 
   const contactList = useMemo(() => {
@@ -28,40 +32,70 @@ const MyContact = () => {
   }, [search, contacts]);
 
   useEffect(() => {
-    const fetchContacts = async () => {
-      setLoading(true);
-      try {
-        const contacts = await api.get('/contact');
-        console.log('contacts', contacts);
-        setContacts(contacts);
-        setLoading(false);
-      } catch (error) {
-        setLoading(false);
-      }
-    };
     fetchContacts();
   }, []);
+
+  const deleteContact = async id => {
+    try {
+      setLoading(true);
+      await api.delete(`/contact/${id}`);
+      fetchContacts();
+      showToast('Your contact has been deleted successsfully');
+      setLoading(false);
+    } catch (error) {
+      console.log('erorr', error);
+      setLoading(false);
+      showToast('Something went wrong', 'red');
+    }
+  };
 
   return (
     <View style={styles.container}>
       <TextInput
+        placeholderTextColor="#a39f95"
         style={styles.textInput}
+        placeholder="search contact"
         value={search}
         onChangeText={event => {
-          console.log('111', event);
           setSearch(event);
         }}
       />
+
       {loading ? (
         <ActivityIndicator />
       ) : (
         <FlatList
           data={contactList}
           keyExtractor={item => item._id}
+          ListHeaderComponent={() =>
+            !contactList.length ? (
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginTop: 20,
+                }}>
+                <Text
+                  style={{
+                    fontSize: 20,
+                  }}>
+                  No contacts found.Search again!
+                </Text>
+              </View>
+            ) : null
+          }
           renderItem={({item}) => (
-            <TouchableOpacity onPress={() => {}}>
-              <ContactsCard contactInfo={item} />
-            </TouchableOpacity>
+            <ContactsCard
+              onPress={() => {
+                updateProfile(item);
+                navigation.navigate('Profile', {profile: item});
+              }}
+              contactInfo={item}
+              handleDelete={id => {
+                deleteContact(id);
+              }}
+            />
           )}
         />
       )}
@@ -86,6 +120,8 @@ const styles = StyleSheet.create({
     borderColor: '#ede7e6',
     height: 50,
     borderRadius: 10,
+    color: 'black',
+    paddingLeft: 20,
   },
 });
 

@@ -1,18 +1,30 @@
 import React from 'react';
 import {View, StyleSheet, Text} from 'react-native';
+import {TouchableOpacity} from 'react-native-gesture-handler';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import CircleView from '../components/CircleView';
+import Divider from './Divider';
 
-export default function ContactsCard({contactInfo}) {
-  const {firstName, lastName} = contactInfo;
+export default function ContactsCard({contactInfo, handleDelete, onPress}) {
+  const {_id, firstName, lastName} = contactInfo;
   return (
-    <View style={styles.card}>
-      <Text style={styles.primaryText}>{firstName + ' ' + lastName}</Text>
-      {/* <View style={styles.infoContainer}>
-        <View style={{...styles.icon, backgroundColor: color}}>
-          <Text style={styles.iconContent}>{displayName[0]}</Text>
-        </View>
-        <Text style={styles.primaryText}>{displayName}</Text>
-      </View> */}
-    </View>
+    <>
+      <View style={styles.card}>
+        <TouchableOpacity
+          style={{flexDirection: 'row', alignItems: 'center'}}
+          onPress={onPress}>
+          <CircleView firstLetter={contactInfo['firstName'][0]} />
+          <Text style={styles.primaryText}>{firstName + ' ' + lastName}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            handleDelete(_id);
+          }}>
+          <Icon name="trash-can-outline" size={25} color="red" />
+        </TouchableOpacity>
+      </View>
+      <Divider />
+    </>
   );
 }
 
@@ -20,6 +32,9 @@ const styles = StyleSheet.create({
   card: {
     padding: 10,
     margin: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   infoContainer: {
     flexDirection: 'row',
@@ -28,6 +43,7 @@ const styles = StyleSheet.create({
   },
   primaryText: {
     fontSize: 18,
+    marginLeft: 20,
   },
   iconContent: {
     flex: 1,
